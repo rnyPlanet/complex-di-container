@@ -21,7 +21,7 @@ public class InstantiationServicesImpl implements InstantiationServices {
     private ObjectInstantiationService instantiationService;
     private LinkedList<EnqueuedServiceDetails> enqueuedServiceDetails;
     private List<Class<?>> allAvailableClasses;
-    private List<ServiceDetails<?>> instantiatedServices;
+    private List<ServiceDetails> instantiatedServices;
 
     public InstantiationServicesImpl(InstantiationConfiguration configuration,
                                      ObjectInstantiationService instantiationService) {
@@ -33,7 +33,7 @@ public class InstantiationServicesImpl implements InstantiationServices {
     }
 
     @Override
-    public List<ServiceDetails<?>> instantiateServicesAndBeans(Set<ServiceDetails<?>> mappedServices) throws ServiceInstantiationException {
+    public List<ServiceDetails> instantiateServicesAndBeans(Set<ServiceDetails> mappedServices) throws ServiceInstantiationException {
         this.init(mappedServices);
         this.checkForMissingServices(mappedServices);
 
@@ -48,7 +48,7 @@ public class InstantiationServicesImpl implements InstantiationServices {
             EnqueuedServiceDetails enqueuedServiceDetails = this.enqueuedServiceDetails.removeFirst();
 
             if (enqueuedServiceDetails.isResolved()) {
-                ServiceDetails<?> serviceDetails = enqueuedServiceDetails.getServiceDetails();
+                ServiceDetails serviceDetails = enqueuedServiceDetails.getServiceDetails();
                 Object[] dependencyInstances = enqueuedServiceDetails.getDependencyInstances();
 
                 this.instantiationService.createInstance(serviceDetails, dependencyInstances);
@@ -63,7 +63,7 @@ public class InstantiationServicesImpl implements InstantiationServices {
         return this.instantiatedServices;
     }
 
-    private void registerInstantiatedService(ServiceDetails<?> serviceDetails) {
+    private void registerInstantiatedService(ServiceDetails serviceDetails) {
         if (!(serviceDetails instanceof ServiceBeanDetails)) {
             this.updatedDependantServices(serviceDetails);
         }
@@ -77,9 +77,9 @@ public class InstantiationServicesImpl implements InstantiationServices {
         }
     }
 
-    private void updatedDependantServices(ServiceDetails<?> newService) {
+    private void updatedDependantServices(ServiceDetails newService) {
         for (Class<?> parameterType : newService.getTargetConstructor().getParameterTypes()) {
-            for (ServiceDetails<?> serviceDetails : this.instantiatedServices) {
+            for (ServiceDetails serviceDetails : this.instantiatedServices) {
                 if (parameterType.isAssignableFrom(serviceDetails.getServiceType())) {
                     serviceDetails.addDependentServices(newService);
                 }
@@ -87,16 +87,16 @@ public class InstantiationServicesImpl implements InstantiationServices {
         }
     }
 
-    private void registerBeans(ServiceDetails<?> serviceDetails) {
+    private void registerBeans(ServiceDetails serviceDetails) {
         for (Method beanMethod : serviceDetails.getBeans()) {
-            ServiceBeanDetails<?> beanDetails = new ServiceBeanDetails<>(beanMethod.getReturnType(), beanMethod, serviceDetails);
+            ServiceBeanDetails beanDetails = new ServiceBeanDetails(beanMethod.getReturnType(), beanMethod, serviceDetails);
             this.instantiationService.createBeanInstance(beanDetails);
             this.registerInstantiatedService(beanDetails);
         }
     }
 
-    private void checkForMissingServices(Set<ServiceDetails<?>> mappedServices) throws ServiceInstantiationException {
-        for (ServiceDetails<?> serviceDetails : mappedServices) {
+    private void checkForMissingServices(Set<ServiceDetails> mappedServices) throws ServiceInstantiationException {
+        for (ServiceDetails serviceDetails : mappedServices) {
             for (Class<?> parameterType : serviceDetails.getTargetConstructor().getParameterTypes()) {
                 if (!this.isAssignableTypePresent(parameterType)) {
                     throw new ServiceInstantiationException(
@@ -120,12 +120,12 @@ public class InstantiationServicesImpl implements InstantiationServices {
         return false;
     }
 
-    private void init(Set<ServiceDetails<?>> mappedServices) {
+    private void init(Set<ServiceDetails> mappedServices) {
         this.enqueuedServiceDetails.clear();
         this.allAvailableClasses.clear();
         this.instantiatedServices.clear();
 
-        for (ServiceDetails<?> serviceDetails : mappedServices) {
+        for (ServiceDetails serviceDetails : mappedServices) {
             this.enqueuedServiceDetails.add(new EnqueuedServiceDetails(serviceDetails));
             this.allAvailableClasses.add(serviceDetails.getServiceType());
             this.allAvailableClasses.addAll(

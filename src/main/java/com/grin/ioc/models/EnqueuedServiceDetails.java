@@ -2,17 +2,17 @@ package com.grin.ioc.models;
 
 public class EnqueuedServiceDetails {
 
-    private ServiceDetails<?> serviceDetails;
+    private ServiceDetails serviceDetails;
     private Class<?>[] dependencies;
     private Object[] dependencyInstances;
 
-    public EnqueuedServiceDetails(ServiceDetails<?> serviceDetails) {
+    public EnqueuedServiceDetails(ServiceDetails serviceDetails) {
         this.serviceDetails = serviceDetails;
         this.dependencies = serviceDetails.getTargetConstructor().getParameterTypes();
         this.dependencyInstances = new Object[this.dependencies.length];
     }
 
-    public ServiceDetails<?> getServiceDetails() {
+    public ServiceDetails getServiceDetails() {
         return this.serviceDetails;
     }
 

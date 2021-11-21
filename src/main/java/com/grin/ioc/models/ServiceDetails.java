@@ -7,24 +7,24 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class ServiceDetails<T> {
+public class ServiceDetails {
 
-    private Class<T> serviceType;
+    private Class<?> serviceType;
     private Annotation annotation;
-    private Constructor<T> targetConstructor;
-    private T instance;
+    private Constructor<?> targetConstructor;
+    private Object instance;
     private Method postConstructMethod;
     private Method preDestroyMethod;
     private Method[] beans;
-    private List<ServiceDetails<?>> dependentServices;
+    private List<ServiceDetails> dependentServices;
 
     public ServiceDetails() {
         this.dependentServices = new ArrayList<>();
     }
 
-    public ServiceDetails(Class<T> serviceType,
+    public ServiceDetails(Class<?> serviceType,
                           Annotation annotation,
-                          Constructor<T> targetConstructor,
+                          Constructor<?> targetConstructor,
                           Method postConstructMethod,
                           Method preDestroyMethod,
                           Method[] beans) {
@@ -37,11 +37,11 @@ public class ServiceDetails<T> {
         this.beans = beans;
     }
 
-    public Class<T> getServiceType() {
+    public Class<?> getServiceType() {
         return serviceType;
     }
 
-    public void setServiceType(Class<T> serviceType) {
+    public void setServiceType(Class<?> serviceType) {
         this.serviceType = serviceType;
     }
 
@@ -53,20 +53,20 @@ public class ServiceDetails<T> {
         this.annotation = annotation;
     }
 
-    public Constructor<T> getTargetConstructor() {
+    public Constructor<?> getTargetConstructor() {
         return targetConstructor;
     }
 
-    public void setTargetConstructor(Constructor<T> targetConstructor) {
+    public void setTargetConstructor(Constructor<?> targetConstructor) {
         this.targetConstructor = targetConstructor;
     }
 
-    public T getInstance() {
+    public Object getInstance() {
         return instance;
     }
 
     public void setInstance(Object instance) {
-        this.instance = (T) instance;
+        this.instance = instance;
     }
 
     public Method getPostConstructMethod() {
@@ -93,11 +93,11 @@ public class ServiceDetails<T> {
         this.beans = beans;
     }
 
-    public List<ServiceDetails<?>> getDependentServices() {
+    public List<ServiceDetails> getDependentServices() {
         return Collections.unmodifiableList(this.dependentServices);
     }
 
-    public void addDependentServices(ServiceDetails<?> dependentService) {
+    public void addDependentServices(ServiceDetails dependentService) {
         this.dependentServices.add(dependentService);
     }
 

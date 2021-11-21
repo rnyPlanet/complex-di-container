@@ -29,8 +29,8 @@ public class ServicesScanningServiceImpl implements ServicesScanningService {
     }
     
     @Override
-    public Set<ServiceDetails<?>> mapServices(Set<Class<?>> locatedClasses) {
-        Set<ServiceDetails<?>> serviceDetails = new HashSet<>();
+    public Set<ServiceDetails> mapServices(Set<Class<?>> locatedClasses) {
+        Set<ServiceDetails> serviceDetails = new HashSet<>();
         Set<Class<? extends Annotation>> serviceAnnotations = configuration.getServiceAnnotations();
 
         for (Class<?> cls : locatedClasses) {
@@ -40,7 +40,7 @@ public class ServicesScanningServiceImpl implements ServicesScanningService {
 
             for (Annotation annotation : cls.getAnnotations()) {
                 if (serviceAnnotations.contains(annotation.annotationType())) {
-                    ServiceDetails<?> detailsService = new ServiceDetails(
+                    ServiceDetails detailsService = new ServiceDetails(
                             cls,
                             annotation,
                             this.findSuitableConstructor(cls),

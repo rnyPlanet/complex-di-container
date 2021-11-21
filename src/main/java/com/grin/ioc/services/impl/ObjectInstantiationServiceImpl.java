@@ -16,7 +16,7 @@ public class ObjectInstantiationServiceImpl implements ObjectInstantiationServic
     private static final String INVALID_PARAMETERS_COUNT_MSG = "Invalid parameters count for '%s'.";
 
     @Override
-    public void createInstance(ServiceDetails<?> serviceDetails, Object... constructorParams) throws ServiceInstantiationException {
+    public void createInstance(ServiceDetails serviceDetails, Object... constructorParams) throws ServiceInstantiationException {
         Constructor<?> targetConstructor = serviceDetails.getTargetConstructor();
 
         if (constructorParams.length != targetConstructor.getParameterCount()) {
@@ -33,7 +33,7 @@ public class ObjectInstantiationServiceImpl implements ObjectInstantiationServic
 
     }
 
-    private void invokePostConstruck(ServiceDetails<?> serviceDetails) throws PostConstructException {
+    private void invokePostConstruck(ServiceDetails serviceDetails) throws PostConstructException {
         if (serviceDetails.getPostConstructMethod() == null) {
             return;
         }
@@ -46,7 +46,7 @@ public class ObjectInstantiationServiceImpl implements ObjectInstantiationServic
     }
 
     @Override
-    public void createBeanInstance(ServiceBeanDetails<?> serviceBeanDetails) throws BeanInstantiationException {
+    public void createBeanInstance(ServiceBeanDetails serviceBeanDetails) throws BeanInstantiationException {
         Method originMethod = serviceBeanDetails.getOriginMethod();
         Object rootIstance = serviceBeanDetails.getRootService().getInstance();
 
@@ -59,7 +59,7 @@ public class ObjectInstantiationServiceImpl implements ObjectInstantiationServic
     }
 
     @Override
-    public void destroyInstance(ServiceDetails<?> serviceDetails) throws PreDestroyException {
+    public void destroyInstance(ServiceDetails serviceDetails) throws PreDestroyException {
         if (serviceDetails.getPreDestroyMethod() != null) {
             try {
                 serviceDetails.getPreDestroyMethod().invoke(serviceDetails.getInstance());

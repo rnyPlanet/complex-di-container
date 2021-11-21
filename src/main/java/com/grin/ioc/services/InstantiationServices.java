@@ -7,5 +7,5 @@ import java.util.List;
 import java.util.Set;
 
 public interface InstantiationServices {
-    List<ServiceDetails<?>> instantiateServicesAndBeans(Set<ServiceDetails<?>> mappedServices) throws ServiceInstantiationException;
+    List<ServiceDetails> instantiateServicesAndBeans(Set<ServiceDetails> mappedServices) throws ServiceInstantiationException;
 }
