@@ -12,9 +12,19 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+/**
+ * {@link ObjectInstantiationService} implementation.
+ */
 public class ObjectInstantiationServiceImpl implements ObjectInstantiationService {
     private static final String INVALID_PARAMETERS_COUNT_MSG = "Invalid parameters count for '%s'.";
 
+    /**
+     * Creates an instance for a service.
+     * Invokes the PostConstruct method.
+     *
+     * @param serviceDetails    the given service details.
+     * @param constructorParams instantiated dependencies.
+     */
     @Override
     public void createInstance(ServiceDetails serviceDetails, Object... constructorParams) throws ServiceInstantiationException {
         Constructor<?> targetConstructor = serviceDetails.getTargetConstructor();
@@ -26,14 +36,19 @@ public class ObjectInstantiationServiceImpl implements ObjectInstantiationServic
         try {
             Object instance = targetConstructor.newInstance(constructorParams);
             serviceDetails.setInstance(instance);
-            this.invokePostConstruck(serviceDetails);
+            this.invokePostConstruct(serviceDetails);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new ServiceInstantiationException(e.getMessage(), e);
         }
 
     }
 
-    private void invokePostConstruck(ServiceDetails serviceDetails) throws PostConstructException {
+    /**
+     * Invokes post construct method if one is present for a given service.
+     *
+     * @param serviceDetails - the given service.
+     */
+    private void invokePostConstruct(ServiceDetails serviceDetails) throws PostConstructException {
         if (serviceDetails.getPostConstructMethod() == null) {
             return;
         }
@@ -45,6 +60,12 @@ public class ObjectInstantiationServiceImpl implements ObjectInstantiationServic
         }
     }
 
+    /**
+     * Creates an instance for a bean by invoking its origin method
+     * and passing the instance of the service in which the bean has been declared.
+     *
+     * @param serviceBeanDetails the given bean details.
+     */
     @Override
     public void createBeanInstance(ServiceBeanDetails serviceBeanDetails) throws BeanInstantiationException {
         Method originMethod = serviceBeanDetails.getOriginMethod();
@@ -58,6 +79,12 @@ public class ObjectInstantiationServiceImpl implements ObjectInstantiationServic
         }
     }
 
+    /**
+     * Sets the instance to null.
+     * Invokes pre destroy method for the given service details if one is present.
+     *
+     * @param serviceDetails given service details.
+     */
     @Override
     public void destroyInstance(ServiceDetails serviceDetails) throws PreDestroyException {
         if (serviceDetails.getPreDestroyMethod() != null) {

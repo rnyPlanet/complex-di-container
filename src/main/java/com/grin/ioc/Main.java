@@ -13,8 +13,17 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Application starting point.
+ *
+ * Holds an instance of Dependency Container.
+ */
 public class Main {
 
+    /**
+     * Stores all loaded classes.
+     * Only one instance of a dependency container.
+     */
     public static final DependencyContainer dependencyContainer;
 
     static {
@@ -25,10 +34,21 @@ public class Main {
         run(Main.class);
     }
 
+    /**
+     * Overload with default configuration.
+     *
+     * @param startupClass any class from the client side.
+     */
     public static void run(Class<?> startupClass) {
         run(startupClass, new DIConfiguration());
     }
 
+    /**
+     * Runs with startup class.
+     *
+     * @param startupClass any class from the client side.
+     * @param configuration client configuration.
+     */
     public static void run(Class<?> startupClass, DIConfiguration configuration) {
         ServicesScanningService scanningService = new ServicesScanningServiceImpl(configuration.annotations());
 
@@ -55,6 +75,16 @@ public class Main {
         runStartUpMethod(startupClass);
     }
 
+    /**
+     * Method calls executes when all services are loaded.
+     * <p>
+     * Looks for instantiated service from the given type.
+     *
+     * If instance is found, looks for void method with 0 params
+     * and with {@link com.grin.ioc.annotations.StartUp} annotation and executes it.
+     *
+     * @param startupClass any class from the client side.
+     */
     private static void runStartUpMethod(Class<?> startupClass) {
         ServiceDetails serviceDetails = dependencyContainer.getServiceDetails(startupClass);
 

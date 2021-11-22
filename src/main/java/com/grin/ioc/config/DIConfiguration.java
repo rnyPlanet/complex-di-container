@@ -5,11 +5,11 @@ import com.grin.ioc.config.configurations.InstantiationConfiguration;
 
 public class DIConfiguration {
     private ConfigurableAnnotationsConfiguration annotations;
-    private InstantiationConfiguration instantitations;
+    private InstantiationConfiguration instantiations;
 
     public DIConfiguration() {
         this.annotations = new ConfigurableAnnotationsConfiguration(this);
-        this.instantitations = new InstantiationConfiguration(this);
+        this.instantiations = new InstantiationConfiguration(this);
     }
 
     public ConfigurableAnnotationsConfiguration annotations() {
@@ -17,7 +17,7 @@ public class DIConfiguration {
     }
 
     public InstantiationConfiguration instantiations() {
-        return this.instantitations;
+        return this.instantiations;
     }
 
     public DIConfiguration build() {
