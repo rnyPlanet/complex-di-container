@@ -9,9 +9,7 @@ import com.grin.ioc.utils.ServiceDetailsConstructorComparator;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -42,43 +40,63 @@ public class ServicesScanningServiceImpl implements ServicesScanningService {
     }
 
     /**
-     * Iterates all given classes and filters those that have {@link Service} annotation
-     * or one prided by the client and collects details for those classes.
+     * Iterates scanned classes with @{@link Service} or user specified annotation
+     * and creates a {@link ServiceDetails} object with the collected information.
      *
      * @param locatedClasses given set of classes.
      * @return set or services and their collected details.
      */
     @Override
     public Set<ServiceDetails> mapServices(Set<Class<?>> locatedClasses) {
-        Set<ServiceDetails> serviceDetails = new HashSet<>();
-        Set<Class<? extends Annotation>> serviceAnnotations = configuration.getServiceAnnotations();
+        Map<Class<?>, Annotation> onlyServiceClasses = this.filterServiceClasses(locatedClasses);
 
-        for (Class<?> cls : locatedClasses) {
-            if (cls.isInterface()) {
+        Set<ServiceDetails> serviceDetailsStorage = new HashSet<>();
+
+        for (Map.Entry<Class<?>, Annotation> serviceAnnotationEntry : onlyServiceClasses.entrySet()) {
+            Class<?> cls = serviceAnnotationEntry.getKey();
+            Annotation annotation = serviceAnnotationEntry.getValue();
+
+            ServiceDetails serviceDetails = new ServiceDetails(
+                    cls,
+                    annotation,
+                    this.findSuitableConstructor(cls),
+                    this.findVoidMethodWithZeroParamsAndAnnotation(PostConstruct.class, cls),
+                    this.findVoidMethodWithZeroParamsAndAnnotation(PreDestroy.class, cls),
+                    this.findBeans(cls)
+            );
+
+            serviceDetailsStorage.add(serviceDetails);
+
+        }
+
+        return serviceDetailsStorage.stream()
+                .sorted(new ServiceDetailsConstructorComparator())
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    /**
+     * Iterates all given classes and filters those that have {@link Service} annotation
+     * or one prided by the client.
+     *
+     * @return service annotated classes.
+     */
+    private Map<Class<?>, Annotation> filterServiceClasses(Collection<Class<?>> scannedClasses) {
+        Set<Class<? extends Annotation>> serviceAnnotations = this.configuration.getServiceAnnotations();
+        Map<Class<?>, Annotation> locatedClasses = new HashMap<>();
+
+        for (Class<?> cls : scannedClasses) {
+            if (cls.isInterface() || cls.isEnum() || cls.isAnnotation()) {
                 continue;
             }
 
             for (Annotation annotation : cls.getAnnotations()) {
                 if (serviceAnnotations.contains(annotation.annotationType())) {
-                    ServiceDetails detailsService = new ServiceDetails(
-                            cls,
-                            annotation,
-                            this.findSuitableConstructor(cls),
-                            this.findVoidMethodWithZeroParamsAndAnnotation(PostConstruct.class, cls),
-                            this.findVoidMethodWithZeroParamsAndAnnotation(PreDestroy.class, cls),
-                            this.findBeans(cls)
-                            );
-
-                    serviceDetails.add(detailsService);
-
+                    locatedClasses.put(cls, annotation);
                     break;
                 }
             }
         }
-
-        return serviceDetails.stream()
-                .sorted(new ServiceDetailsConstructorComparator())
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+        return locatedClasses;
     }
 
     /**
@@ -94,6 +112,16 @@ public class ServicesScanningServiceImpl implements ServicesScanningService {
                 ctr.setAccessible(true);
                 return ctr;
             }
+
+            for (Annotation declaredAnnotation : ctr.getDeclaredAnnotations()) {
+                if (declaredAnnotation.annotationType().isAnnotationPresent(AliasFor.class)) {
+                    Class<? extends Annotation> aliasValue = declaredAnnotation.annotationType().getAnnotation(AliasFor.class).value();
+                    if (aliasValue == Autowired.class) {
+                        ctr.setAccessible(true);
+                        return ctr;
+                    }
+                }
+            }
         }
 
         return cls.getConstructors()[0];
@@ -103,13 +131,24 @@ public class ServicesScanningServiceImpl implements ServicesScanningService {
                                                              Class<?> cls) {
         for (Method method : cls.getDeclaredMethods()) {
             if (method.getParameterCount() != 0 ||
-                    (method.getReturnType() != void.class && method.getReturnType() != Void.class) ||
-                    !method.isAnnotationPresent(annotation)) {
+                    (method.getReturnType() != void.class && method.getReturnType() != Void.class)) {
                 continue;
             }
 
-            method.setAccessible(true);
-            return method;
+            if (method.isAnnotationPresent(annotation)) {
+                method.setAccessible(true);
+                return method;
+            }
+
+            for (Annotation declaredAnnotation : method.getDeclaredAnnotations()) {
+                if (declaredAnnotation.annotationType().isAnnotationPresent(AliasFor.class)) {
+                    Class<? extends Annotation> aliasValue = declaredAnnotation.annotationType().getAnnotation(AliasFor.class).value();
+                    if (aliasValue == annotation) {
+                        method.setAccessible(true);
+                        return method;
+                    }
+                }
+            }
         }
 
         return null;

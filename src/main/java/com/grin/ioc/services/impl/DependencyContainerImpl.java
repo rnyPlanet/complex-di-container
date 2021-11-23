@@ -7,6 +7,7 @@ import com.grin.ioc.services.DependencyContainer;
 import com.grin.ioc.services.ObjectInstantiationService;
 
 import java.lang.annotation.Annotation;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,6 +24,7 @@ public class DependencyContainerImpl implements DependencyContainer {
     private static final String ALREADY_INITIALIZED_MSG = "Dependency container already initialized.";
 
     private boolean isInit;
+    private Collection<Class<?>> locatedClasses;
     private List<ServiceDetails> servicesAndBeans;
     private ObjectInstantiationService instantiationService;
 
@@ -31,11 +33,12 @@ public class DependencyContainerImpl implements DependencyContainer {
     }
 
     @Override
-    public void init(List<ServiceDetails> servicesAndBeans, ObjectInstantiationService instantiationService) throws AlreadyInitializedException {
+    public void init(Collection<Class<?>> locatedClasses, List<ServiceDetails> servicesAndBeans, ObjectInstantiationService instantiationService) throws AlreadyInitializedException {
         if (this.isInit) {
             throw new AlreadyInitializedException(ALREADY_INITIALIZED_MSG);
         }
 
+        this.locatedClasses = locatedClasses;
         this.servicesAndBeans = servicesAndBeans;
         this.instantiationService = instantiationService;
 
@@ -192,5 +195,10 @@ public class DependencyContainerImpl implements DependencyContainer {
     @Override
     public List<ServiceDetails> getAllServiceDetails() {
         return Collections.unmodifiableList(this.servicesAndBeans);
+    }
+
+    @Override
+    public Collection<Class<?>> getLocatedClasses() {
+        return Collections.unmodifiableCollection(this.locatedClasses);
     }
 }

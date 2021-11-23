@@ -4,7 +4,7 @@ import com.grin.ioc.config.BaseConfiguration;
 import com.grin.ioc.config.DIConfiguration;
 
 import java.lang.annotation.Annotation;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -24,8 +24,8 @@ public class ConfigurableAnnotationsConfiguration extends BaseConfiguration {
         return this;
     }
 
-    public ConfigurableAnnotationsConfiguration addServiceAnnotations(Class<? extends Annotation>... annotations) {
-        this.serviceAnnotations.addAll(Arrays.asList(annotations));
+    public ConfigurableAnnotationsConfiguration addServiceAnnotations(Collection<Class<? extends Annotation>> annotations) {
+        this.serviceAnnotations.addAll(Set.copyOf(annotations));
         return this;
     }
 
@@ -33,8 +33,8 @@ public class ConfigurableAnnotationsConfiguration extends BaseConfiguration {
         this.beanAnnotations.add(annotation);
         return this;
     }
-    public ConfigurableAnnotationsConfiguration addBeanAnnotations(Class<? extends Annotation> annotations) {
-        this.beanAnnotations.addAll(Arrays.asList(annotations));
+    public ConfigurableAnnotationsConfiguration addBeanAnnotations(Collection<Class<? extends Annotation>> annotations) {
+        this.beanAnnotations.addAll(Set.copyOf(annotations));
         return this;
     }
 

@@ -71,7 +71,7 @@ public class Main {
         Set<ServiceDetails> mappedServices = scanningService.mapServices(locatedClasses);
         List<ServiceDetails> serviceDetails = instantiationService.instantiateServicesAndBeans(mappedServices);
 
-        dependencyContainer.init(serviceDetails, objectInstantiationService);
+        dependencyContainer.init(locatedClasses, serviceDetails, objectInstantiationService);
         runStartUpMethod(startupClass);
     }
 
