@@ -96,6 +96,16 @@ public class ServicesScanningServiceImpl implements ServicesScanningService {
                 }
             }
         }
+
+        this.configuration.getAdditionalClasses().forEach((cls, a) -> {
+            Annotation annotation = null;
+            if (a != null && cls.isAnnotationPresent(a)) {
+                annotation = cls.getAnnotation(a);
+            }
+
+            locatedClasses.put(cls, annotation);
+        });
+
         return locatedClasses;
     }
 
