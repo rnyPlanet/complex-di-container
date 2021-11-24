@@ -4,6 +4,7 @@ import com.grin.ioc.annotations.*;
 import com.grin.ioc.config.configurations.ConfigurableAnnotationsConfiguration;
 import com.grin.ioc.models.ServiceDetails;
 import com.grin.ioc.services.ServicesScanningService;
+import com.grin.ioc.utils.AliasFinder;
 import com.grin.ioc.utils.ServiceDetailsConstructorComparator;
 
 import java.lang.annotation.Annotation;
@@ -124,12 +125,10 @@ public class ServicesScanningServiceImpl implements ServicesScanningService {
             }
 
             for (Annotation declaredAnnotation : ctr.getDeclaredAnnotations()) {
-                if (declaredAnnotation.annotationType().isAnnotationPresent(AliasFor.class)) {
-                    Class<? extends Annotation> aliasValue = declaredAnnotation.annotationType().getAnnotation(AliasFor.class).value();
-                    if (aliasValue == Autowired.class) {
-                        ctr.setAccessible(true);
-                        return ctr;
-                    }
+                final Class<? extends Annotation> aliasAnnotation = AliasFinder.getAliasAnnotation(declaredAnnotation, Autowired.class);
+                if (aliasAnnotation != null) {
+                    ctr.setAccessible(true);
+                    return ctr;
                 }
             }
         }
@@ -151,12 +150,11 @@ public class ServicesScanningServiceImpl implements ServicesScanningService {
             }
 
             for (Annotation declaredAnnotation : method.getDeclaredAnnotations()) {
-                if (declaredAnnotation.annotationType().isAnnotationPresent(AliasFor.class)) {
-                    Class<? extends Annotation> aliasValue = declaredAnnotation.annotationType().getAnnotation(AliasFor.class).value();
-                    if (aliasValue == annotation) {
-                        method.setAccessible(true);
-                        return method;
-                    }
+                Class<? extends Annotation> aliasAnnotation = AliasFinder.getAliasAnnotation(declaredAnnotation, annotation);
+
+                if (aliasAnnotation != null) {
+                    method.setAccessible(true);
+                    return method;
                 }
             }
         }
