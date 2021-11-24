@@ -7,6 +7,7 @@ import com.grin.ioc.models.ServiceBeanDetails;
 import com.grin.ioc.models.ServiceDetails;
 import com.grin.ioc.services.InstantiationServices;
 import com.grin.ioc.services.ObjectInstantiationService;
+import com.grin.ioc.utils.ProxyUtils;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -89,6 +90,8 @@ public class InstantiationServicesImpl implements InstantiationServices {
                 Object[] dependencyInstances = enqueuedServiceDetails.getDependencyInstances();
 
                 this.instantiationService.createInstance(serviceDetails, dependencyInstances);
+                ProxyUtils.createProxyInstance(serviceDetails, enqueuedServiceDetails.getDependencyInstances());
+
                 this.registerInstantiatedService(serviceDetails);
                 this.registerBeans(serviceDetails);
             } else {
@@ -116,7 +119,7 @@ public class InstantiationServicesImpl implements InstantiationServices {
 
         for (EnqueuedServiceDetails enqueuedService : this.enqueuedServiceDetails) {
             if (enqueuedService.isDependencyRequired(newlyCreatedService.getServiceType())) {
-                enqueuedService.addDependencyInstance(newlyCreatedService.getInstance());
+                enqueuedService.addDependencyInstance(newlyCreatedService.getActualInstance());
             }
         }
     }
@@ -152,6 +155,8 @@ public class InstantiationServicesImpl implements InstantiationServices {
         for (Method beanMethod : serviceDetails.getBeans()) {
             ServiceBeanDetails beanDetails = new ServiceBeanDetails(beanMethod.getReturnType(), beanMethod, serviceDetails);
             this.instantiationService.createBeanInstance(beanDetails);
+            beanDetails.setProxyInstance(beanDetails.getActualInstance());
+
             this.registerInstantiatedService(beanDetails);
         }
     }

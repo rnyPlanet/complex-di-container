@@ -133,7 +133,7 @@ public class DependencyContainerImpl implements DependencyContainer {
 
         this.reload(serviceDetails, reloadDependentServices);
 
-        return (T) serviceDetails.getInstance();
+        return (T) serviceDetails.getActualInstance();
     }
 
     /**
@@ -148,7 +148,7 @@ public class DependencyContainerImpl implements DependencyContainer {
         ServiceDetails serviceDetails = this.getServiceDetails(serviceType);
 
         if (serviceDetails != null) {
-            return (T) serviceDetails.getInstance();
+            return (T) serviceDetails.getActualInstance();
         }
 
         return null;
@@ -163,7 +163,7 @@ public class DependencyContainerImpl implements DependencyContainer {
     @Override
     public ServiceDetails getServiceDetails(Class<?> serviceType) {
         return this.servicesAndBeans.stream()
-                .filter(sd -> serviceType.isAssignableFrom(sd.getServiceType()))
+                .filter(sd -> serviceType.isAssignableFrom(sd.getProxyInstance().getClass()) || serviceType.isAssignableFrom(sd.getServiceType()))
                 .findFirst().orElse(null);
     }
 
@@ -185,7 +185,7 @@ public class DependencyContainerImpl implements DependencyContainer {
     @Override
     public List<Object> getAllServices() {
         return this.servicesAndBeans.stream()
-                .map(ServiceDetails::getInstance)
+                .map(ServiceDetails::getActualInstance)
                 .collect(Collectors.toList());
     }
 

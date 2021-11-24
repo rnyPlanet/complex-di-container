@@ -16,6 +16,7 @@ import java.util.List;
  * at startup.
  */
 public class ServiceDetails {
+    private static final String PROXY_ALREADY_CREATED_MSG = "Proxy instance already created.";
 
     /**
      * The type of the service.
@@ -36,6 +37,11 @@ public class ServiceDetails {
      * Service instance.
      */
     private Object instance;
+
+    /**
+     * Proxy instance that will be injected into services instead of actual instance.
+     */
+    private Object proxyInstance;
 
     /**
      * Reference to the post construct method if any.
@@ -100,12 +106,24 @@ public class ServiceDetails {
         this.targetConstructor = targetConstructor;
     }
 
-    public Object getInstance() {
+    public Object getActualInstance() {
         return instance;
     }
 
     public void setInstance(Object instance) {
         this.instance = instance;
+    }
+
+    public Object getProxyInstance() {
+        return this.proxyInstance;
+    }
+
+    public void setProxyInstance(Object proxyInstance) {
+        if (this.proxyInstance != null) {
+            throw new IllegalArgumentException(PROXY_ALREADY_CREATED_MSG);
+        }
+
+        this.proxyInstance = proxyInstance;
     }
 
     public Method getPostConstructMethod() {

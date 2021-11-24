@@ -54,7 +54,7 @@ public class ObjectInstantiationServiceImpl implements ObjectInstantiationServic
         }
 
         try {
-            serviceDetails.getPostConstructMethod().invoke(serviceDetails.getInstance());
+            serviceDetails.getPostConstructMethod().invoke(serviceDetails.getActualInstance());
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new PostConstructException(e.getMessage(), e);
         }
@@ -69,7 +69,7 @@ public class ObjectInstantiationServiceImpl implements ObjectInstantiationServic
     @Override
     public void createBeanInstance(ServiceBeanDetails serviceBeanDetails) throws BeanInstantiationException {
         Method originMethod = serviceBeanDetails.getOriginMethod();
-        Object rootIstance = serviceBeanDetails.getRootService().getInstance();
+        Object rootIstance = serviceBeanDetails.getRootService().getActualInstance();
 
         try {
             Object instance = originMethod.invoke(rootIstance);
@@ -89,7 +89,7 @@ public class ObjectInstantiationServiceImpl implements ObjectInstantiationServic
     public void destroyInstance(ServiceDetails serviceDetails) throws PreDestroyException {
         if (serviceDetails.getPreDestroyMethod() != null) {
             try {
-                serviceDetails.getPreDestroyMethod().invoke(serviceDetails.getInstance());
+                serviceDetails.getPreDestroyMethod().invoke(serviceDetails.getActualInstance());
             } catch (IllegalAccessException | InvocationTargetException e) {
                 throw new PreDestroyException(e.getMessage(), e);
             }
