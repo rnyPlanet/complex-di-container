@@ -76,6 +76,17 @@ public class DependencyContainerImpl implements DependencyContainer {
         this.reload(serviceDetails);
     }
 
+    @Override
+    public void update(Object service) {
+        ServiceDetails serviceDetails = this.getServiceDetails(service.getClass());
+        if (serviceDetails == null) {
+            throw new IllegalArgumentException(String.format(SERVICE_NOT_FOUND_FORMAT, service));
+        }
+
+        this.instantiationService.destroyInstance(serviceDetails);
+        serviceDetails.setInstance(service);
+    }
+
     /**
      * Handles different types of service.
      *
@@ -145,7 +156,7 @@ public class DependencyContainerImpl implements DependencyContainer {
         }
 
         ServiceDetails serviceDetails = this.servicesAndBeans.stream()
-                .filter(sd -> serviceType.isAssignableFrom(sd.getServiceType()))
+                .filter(sd -> serviceType.isAssignableFrom(sd.getProxyInstance().getClass()) || serviceType.isAssignableFrom(sd.getServiceType()))
                 .findFirst().orElse(null);
 
         if (serviceDetails != null) {
