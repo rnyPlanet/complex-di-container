@@ -74,6 +74,7 @@ public class ObjectInstantiationServiceImpl implements ObjectInstantiationServic
         try {
             Object instance = originMethod.invoke(rootIstance);
             serviceBeanDetails.setInstance(instance);
+            serviceBeanDetails.setProxyInstance(instance);
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new BeanInstantiationException(e.getMessage(), e);
         }

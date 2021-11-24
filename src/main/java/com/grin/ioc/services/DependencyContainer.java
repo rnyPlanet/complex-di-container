@@ -8,23 +8,21 @@ import java.util.Collection;
 import java.util.List;
 
 public interface DependencyContainer {
-    void init(Collection<Class<?>> locatedClasses, List<ServiceDetails> servicesAndBeans, ObjectInstantiationService instantiationService) throws AlreadyInitializedException;
+    void init(Collection<Class<?>> locatedClasses, Collection<ServiceDetails> servicesAndBeans, ObjectInstantiationService instantiationService) throws AlreadyInitializedException;
 
-    void reload(ServiceDetails serviceDetails, boolean reloadDependentServices);
+    void reload(ServiceDetails serviceDetails);
 
-    <T> T reload(T service);
-
-    <T> T reload(T service, boolean reloadDependentServices);
+    void reload(Class<?> serviceType);
 
     <T> T getService(Class<T> serviceType);
 
     ServiceDetails getServiceDetails(Class<?> serviceType);
 
-    List<ServiceDetails> getServicesByAnnotation(Class<? extends Annotation> annotationType);
+    Collection<Class<?>> getAllScannedClasses();
 
-    List<Object> getAllServices();
+    Collection<ServiceDetails> getImplementations(Class<?> serviceType);
 
-    List<ServiceDetails> getAllServiceDetails();
+    Collection<ServiceDetails> getServicesByAnnotation(Class<? extends Annotation> annotationType);
 
-    Collection<Class<?>> getLocatedClasses();
+    Collection<ServiceDetails> getAllServices();
 }
