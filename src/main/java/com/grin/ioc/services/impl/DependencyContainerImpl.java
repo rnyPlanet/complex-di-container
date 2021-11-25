@@ -7,6 +7,7 @@ import com.grin.ioc.services.DependencyContainer;
 import com.grin.ioc.services.ObjectInstantiationService;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -107,8 +108,29 @@ public class DependencyContainerImpl implements DependencyContainer {
                 }
             }
         } else {
-            this.instantiationService.createInstance(serviceDetails, this.collectDependencies(serviceDetails));
+            this.instantiationService.createInstance(
+                    serviceDetails,
+                    this.collectDependencies(serviceDetails),
+                    this.collectAutowiredFieldsDependencies(serviceDetails)
+            );
         }
+    }
+
+    /**
+     * Gets instances of all {@link com.grin.ioc.annotations.Autowired} annotated dependencies for a given service.
+     *
+     * @param serviceDetails - the given service.
+     * @return array of instantiated dependencies.
+     */
+    private Object[] collectAutowiredFieldsDependencies(ServiceDetails serviceDetails) {
+        Field[] autowireAnnotatedFields = serviceDetails.getAutowireAnnotatedFields();
+        Object[] instances = new Object[autowireAnnotatedFields.length];
+
+        for (int i = 0; i < autowireAnnotatedFields.length; i++) {
+            instances[i] = this.getService(autowireAnnotatedFields[i].getType());
+        }
+
+        return instances;
     }
 
     /**

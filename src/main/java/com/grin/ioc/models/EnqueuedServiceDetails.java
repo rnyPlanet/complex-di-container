@@ -1,5 +1,6 @@
 package com.grin.ioc.models;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 
 /**
@@ -28,6 +29,16 @@ public class EnqueuedServiceDetails {
      */
     private Object[] dependencyInstances;
 
+    /**
+     * Array of dependencies that are required from {@link com.grin.ioc.annotations.Autowired} annotated fields.
+     */
+    private Class<?>[] fieldDependencies;
+
+    /**
+     * Array of instances matching the types in @fieldDependencies
+     */
+    private Object[] fieldDependencyInstances;
+
     public EnqueuedServiceDetails(ServiceDetails serviceDetails) {
         this.serviceDetails = serviceDetails;
         this.dependencies = serviceDetails.getTargetConstructor().getParameterTypes();
@@ -35,10 +46,31 @@ public class EnqueuedServiceDetails {
         this.dependenciesRequirement = new boolean[this.dependencies.length];
 
         Arrays.fill(this.dependenciesRequirement, true);
+
+        this.fieldDependencies = new Class[this.serviceDetails.getAutowireAnnotatedFields().length];
+        this.fieldDependencyInstances = new Object[this.serviceDetails.getAutowireAnnotatedFields().length];
+
+        this.fillFieldDependencyTypes();
+    }
+
+    private void fillFieldDependencyTypes() {
+        Field[] autowireAnnotatedFields = this.serviceDetails.getAutowireAnnotatedFields();
+
+        for (int i = 0; i < autowireAnnotatedFields.length; i++) {
+            this.fieldDependencies[i] = autowireAnnotatedFields[i].getType();
+        }
     }
 
     public ServiceDetails getServiceDetails() {
         return this.serviceDetails;
+    }
+
+    public Class<?>[] getFieldDependencies() {
+        return this.fieldDependencies;
+    }
+
+    public Object[] getFieldDependencyInstances() {
+        return this.fieldDependencyInstances;
     }
 
     public Class<?>[] getDependencies() {
@@ -56,10 +88,18 @@ public class EnqueuedServiceDetails {
      * @param instance the given dependency instance.
      */
     public void addDependencyInstance(Object instance) {
+        Class<?> instanceType = instance.getClass();
+
         for (int i = 0; i < this.dependencies.length; i++) {
-            if (this.dependencies[i].isAssignableFrom(instance.getClass())) {
+            if (this.dependencies[i].isAssignableFrom(instanceType)) {
                 this.dependencyInstances[i] = instance;
                 return;
+            }
+        }
+
+        for (int i = 0; i < this.fieldDependencies.length; i++) {
+            if (this.fieldDependencies[i].isAssignableFrom(instanceType)) {
+                this.fieldDependencyInstances[i] = instance;
             }
         }
     }
@@ -72,6 +112,12 @@ public class EnqueuedServiceDetails {
     public boolean isResolved() {
         for (int i = 0; i < this.dependencyInstances.length; i++) {
             if (this.dependencyInstances[i] == null && this.dependenciesRequirement[i]) {
+                return false;
+            }
+        }
+
+        for (Object fieldDependencyInstance : this.fieldDependencyInstances) {
+            if (fieldDependencyInstance == null) {
                 return false;
             }
         }
@@ -92,6 +138,12 @@ public class EnqueuedServiceDetails {
             }
         }
 
+        for (Class<?> fieldDependency : this.fieldDependencies) {
+            if (fieldDependency.isAssignableFrom(dependencyType)) {
+                return true;
+            }
+        }
+
         return false;
     }
 
@@ -102,16 +154,6 @@ public class EnqueuedServiceDetails {
                 return;
             }
         }
-    }
-
-    public boolean isDependencyNotNull(Class<?> dependencyType) {
-        for (int i = 0; i < this.dependenciesRequirement.length; i++) {
-            if (this.dependencies[i].isAssignableFrom(dependencyType)) {
-                return this.dependenciesRequirement[i];
-            }
-        }
-
-        throw new IllegalArgumentException(String.format("Invalid dependency \"%s\".", dependencyType));
     }
 
     @Override

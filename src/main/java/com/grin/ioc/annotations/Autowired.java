@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
  * services
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.CONSTRUCTOR)
+@Target({ElementType.CONSTRUCTOR, ElementType.FIELD})
 public @interface Autowired {
 
 }

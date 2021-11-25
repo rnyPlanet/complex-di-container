@@ -2,6 +2,7 @@ package com.grin.ioc.models;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -58,6 +59,8 @@ public class ServiceDetails {
      */
     private Method[] beans;
 
+    private Field[] autowireAnnotatedFields;
+
     /**
      * List of all services that depend on this one.
      */
@@ -72,7 +75,8 @@ public class ServiceDetails {
                           Constructor<?> targetConstructor,
                           Method postConstructMethod,
                           Method preDestroyMethod,
-                          Method[] beans) {
+                          Method[] beans,
+                          Field[] autowireAnnotatedFields) {
         this();
         this.serviceType = serviceType;
         this.annotation = annotation;
@@ -80,10 +84,19 @@ public class ServiceDetails {
         this.postConstructMethod = postConstructMethod;
         this.preDestroyMethod = preDestroyMethod;
         this.beans = beans;
+        this.autowireAnnotatedFields = autowireAnnotatedFields;
     }
 
     public Class<?> getServiceType() {
         return serviceType;
+    }
+
+    public Field[] getAutowireAnnotatedFields() {
+        return this.autowireAnnotatedFields;
+    }
+
+    public void setAutowireAnnotatedFields(Field[] autowireAnnotatedFields) {
+        this.autowireAnnotatedFields = autowireAnnotatedFields;
     }
 
     public void setServiceType(Class<?> serviceType) {

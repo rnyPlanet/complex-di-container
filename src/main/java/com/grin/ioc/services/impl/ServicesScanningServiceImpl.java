@@ -9,6 +9,7 @@ import com.grin.ioc.utils.ServiceDetailsConstructorComparator;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -63,7 +64,8 @@ public class ServicesScanningServiceImpl implements ServicesScanningService {
                     this.findSuitableConstructor(cls),
                     this.findVoidMethodWithZeroParamsAndAnnotation(PostConstruct.class, cls),
                     this.findVoidMethodWithZeroParamsAndAnnotation(PreDestroy.class, cls),
-                    this.findBeans(cls)
+                    this.findBeans(cls),
+                    this.findAutowireAnnotatedFields(cls, new ArrayList<>()).toArray(new Field[0])
             );
 
             serviceDetailsStorage.add(serviceDetails);
@@ -119,17 +121,9 @@ public class ServicesScanningServiceImpl implements ServicesScanningService {
      */
     private Constructor<?> findSuitableConstructor(Class<?> cls) {
         for (Constructor<?> ctr : cls.getDeclaredConstructors()) {
-            if (ctr.isAnnotationPresent(Autowired.class)) {
+            if (AliasFinder.isAnnotationPresent(ctr.getDeclaredAnnotations(), Autowired.class)) {
                 ctr.setAccessible(true);
                 return ctr;
-            }
-
-            for (Annotation declaredAnnotation : ctr.getDeclaredAnnotations()) {
-                final Class<? extends Annotation> aliasAnnotation = AliasFinder.getAliasAnnotation(declaredAnnotation, Autowired.class);
-                if (aliasAnnotation != null) {
-                    ctr.setAccessible(true);
-                    return ctr;
-                }
             }
         }
 
@@ -144,18 +138,9 @@ public class ServicesScanningServiceImpl implements ServicesScanningService {
                 continue;
             }
 
-            if (method.isAnnotationPresent(annotation)) {
+            if (AliasFinder.isAnnotationPresent(method.getDeclaredAnnotations(), annotation)) {
                 method.setAccessible(true);
                 return method;
-            }
-
-            for (Annotation declaredAnnotation : method.getDeclaredAnnotations()) {
-                Class<? extends Annotation> aliasAnnotation = AliasFinder.getAliasAnnotation(declaredAnnotation, annotation);
-
-                if (aliasAnnotation != null) {
-                    method.setAccessible(true);
-                    return method;
-                }
             }
         }
 
@@ -191,5 +176,20 @@ public class ServicesScanningServiceImpl implements ServicesScanningService {
         }
 
         return beanMethods.toArray(Method[]::new);
+    }
+
+    private List<Field> findAutowireAnnotatedFields(Class<?> cls, List<Field> fields) {
+        for (Field declaredField : cls.getDeclaredFields()) {
+            if (AliasFinder.isAnnotationPresent(declaredField.getDeclaredAnnotations(), Autowired.class)) {
+                declaredField.setAccessible(true);
+                fields.add(declaredField);
+            }
+        }
+
+        if (cls.getSuperclass() != null) {
+            return this.findAutowireAnnotatedFields(cls.getSuperclass(), fields);
+        }
+
+        return fields;
     }
 }

@@ -9,6 +9,7 @@ import com.grin.ioc.models.ServiceDetails;
 import com.grin.ioc.services.ObjectInstantiationService;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -26,7 +27,7 @@ public class ObjectInstantiationServiceImpl implements ObjectInstantiationServic
      * @param constructorParams instantiated dependencies.
      */
     @Override
-    public void createInstance(ServiceDetails serviceDetails, Object... constructorParams) throws ServiceInstantiationException {
+    public void createInstance(ServiceDetails serviceDetails, Object[] constructorParams, Object[] autowiredFieldInstances) throws ServiceInstantiationException {
         Constructor<?> targetConstructor = serviceDetails.getTargetConstructor();
 
         if (constructorParams.length != targetConstructor.getParameterCount()) {
@@ -36,11 +37,26 @@ public class ObjectInstantiationServiceImpl implements ObjectInstantiationServic
         try {
             Object instance = targetConstructor.newInstance(constructorParams);
             serviceDetails.setInstance(instance);
+            this.setAutowiredFieldInstances(serviceDetails, autowiredFieldInstances);
             this.invokePostConstruct(serviceDetails);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new ServiceInstantiationException(e.getMessage(), e);
         }
 
+    }
+
+    /**
+     * Iterates all {@link com.grin.ioc.annotations.Autowired} annotated fields and sets them a given instance.
+     *
+     * @param serviceDetails          - given service details.
+     * @param autowiredFieldInstances - field instances.
+     */
+    private void setAutowiredFieldInstances(ServiceDetails serviceDetails, Object[] autowiredFieldInstances) throws IllegalAccessException {
+        Field[] autowireAnnotatedFields = serviceDetails.getAutowireAnnotatedFields();
+
+        for (int i = 0; i < autowireAnnotatedFields.length; i++) {
+            autowireAnnotatedFields[i].set(serviceDetails.getActualInstance(), autowiredFieldInstances[i]);
+        }
     }
 
     /**
