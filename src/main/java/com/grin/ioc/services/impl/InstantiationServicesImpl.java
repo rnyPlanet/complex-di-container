@@ -158,6 +158,9 @@ public class InstantiationServicesImpl implements InstantiationServices {
         for (Method beanMethod : serviceDetails.getBeans()) {
             ServiceBeanDetails beanDetails = new ServiceBeanDetails(beanMethod.getReturnType(), beanMethod, serviceDetails);
             this.instantiationService.createBeanInstance(beanDetails);
+
+            ProxyUtils.createBeanProxyInstance(beanDetails);
+
             this.registerInstantiatedService(beanDetails);
         }
     }

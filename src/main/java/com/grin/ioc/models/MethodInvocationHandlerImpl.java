@@ -4,10 +4,10 @@ import javassist.util.proxy.MethodHandler;
 
 import java.lang.reflect.Method;
 
-public class InvocationHandler implements MethodHandler {
+public class MethodInvocationHandlerImpl implements MethodHandler {
     private ServiceDetails serviceDetails;
 
-    public InvocationHandler(ServiceDetails serviceDetails) {
+    public MethodInvocationHandlerImpl(ServiceDetails serviceDetails) {
         this.serviceDetails = serviceDetails;
     }
 

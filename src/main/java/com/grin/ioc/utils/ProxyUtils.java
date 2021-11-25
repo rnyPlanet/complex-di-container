@@ -1,11 +1,14 @@
 package com.grin.ioc.utils;
 
-import com.grin.ioc.models.InvocationHandler;
+import com.grin.ioc.models.MethodInvocationHandlerImpl;
+import com.grin.ioc.models.InvocationHandlerImpl;
+import com.grin.ioc.models.ServiceBeanDetails;
 import com.grin.ioc.models.ServiceDetails;
 import javassist.util.proxy.ProxyFactory;
 import javassist.util.proxy.ProxyObject;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
 import java.util.Arrays;
 
 public class ProxyUtils {
@@ -37,7 +40,20 @@ public class ProxyUtils {
             throw new RuntimeException(e);
         }
 
-        ((ProxyObject) proxyInstance).setHandler(new InvocationHandler(serviceDetails));
+        ((ProxyObject) proxyInstance).setHandler(new MethodInvocationHandlerImpl(serviceDetails));
+
+        serviceDetails.setProxyInstance(proxyInstance);
+    }
+
+    public static void createBeanProxyInstance(ServiceBeanDetails serviceDetails) {
+        if (!serviceDetails.getServiceType().isInterface()) {
+            return;
+        }
+
+        Object proxyInstance = Proxy.newProxyInstance(
+                serviceDetails.getServiceType().getClassLoader(),
+                new Class[]{serviceDetails.getServiceType()},
+                new InvocationHandlerImpl(serviceDetails));
 
         serviceDetails.setProxyInstance(proxyInstance);
     }
