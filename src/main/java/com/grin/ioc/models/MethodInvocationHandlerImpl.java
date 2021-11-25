@@ -2,6 +2,7 @@ package com.grin.ioc.models;
 
 import javassist.util.proxy.MethodHandler;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 public class MethodInvocationHandlerImpl implements MethodHandler {
@@ -13,6 +14,10 @@ public class MethodInvocationHandlerImpl implements MethodHandler {
 
     @Override
     public Object invoke(Object o, Method method, Method method1, Object[] objects) throws Throwable {
-        return method.invoke(this.serviceDetails.getActualInstance(), objects);
+        try {
+            return method.invoke(this.serviceDetails.getActualInstance(), objects);
+        } catch (InvocationTargetException ex) {
+            throw ex.getTargetException();
+        }
     }
 }

@@ -8,8 +8,10 @@ import com.grin.ioc.models.ServiceDetails;
 import com.grin.ioc.services.*;
 import com.grin.ioc.services.impl.*;
 
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -19,16 +21,6 @@ import java.util.Set;
  * Holds an instance of Dependency Container.
  */
 public class Main {
-
-    /**
-     * Stores all loaded classes.
-     * Only one instance of a dependency container.
-     */
-    public static final DependencyContainer dependencyContainer;
-
-    static {
-        dependencyContainer = new DependencyContainerImpl();
-    }
 
     public static void main(String[] args) {
         run(Main.class);
@@ -49,7 +41,17 @@ public class Main {
      * @param startupClass any class from the client side.
      * @param configuration client configuration.
      */
-    public static void run(Class<?> startupClass, DIConfiguration configuration) {
+    public static DependencyContainer run(Class<?> startupClass, DIConfiguration configuration) {
+        DependencyContainer dependencyContainer = run(new File[]{
+                new File(new DirectoryResolverImpl().resolveDirectory(startupClass).getDirectory()),
+        }, configuration);
+
+        runStartUpMethod(startupClass, dependencyContainer);
+
+        return dependencyContainer;
+    }
+
+    public static DependencyContainer run(File[] startupDirectories, DIConfiguration configuration) {
         ServicesScanningService scanningService = new ServicesScanningServiceImpl(configuration.annotations());
 
         ObjectInstantiationService objectInstantiationService = new ObjectInstantiationServiceImpl();
@@ -58,21 +60,34 @@ public class Main {
                 objectInstantiationService
         );
 
-
-        Directory directory = new DirectoryResolverImpl().resolveDirectory(startupClass);
-
-        ClassPathScanner pathScanner = new ClassPathScannerForDirectory();
-        if (directory.getDirectoryType() == DirectoryType.JAR_FILE) {
-            pathScanner = new ClassPathScannerForJarFile();
-        }
-
-        Set<Class<?>> locatedClasses = pathScanner.locateClasses(directory.getDirectory());
+        Set<Class<?>> locatedClasses = locateClasses(startupDirectories);
 
         Set<ServiceDetails> mappedServices = scanningService.mapServices(locatedClasses);
         List<ServiceDetails> serviceDetails = instantiationService.instantiateServicesAndBeans(mappedServices);
 
+        DependencyContainer dependencyContainer = new DependencyContainerImpl();
+
         dependencyContainer.init(locatedClasses, serviceDetails, objectInstantiationService);
-        runStartUpMethod(startupClass);
+
+        return dependencyContainer;
+    }
+
+    private static Set<Class<?>> locateClasses(File[] startupDirectories) {
+        Set<Class<?>> locatedClasses = new HashSet<>();
+        DirectoryResolver directoryResolver = new DirectoryResolverImpl();
+
+        for (File startupDirectory : startupDirectories) {
+            final Directory directory = directoryResolver.resolveDirectory(startupDirectory);
+
+            ClassPathScanner classLocator = new ClassPathScannerForDirectory(Thread.currentThread().getContextClassLoader());
+            if (directory.getDirectoryType() == DirectoryType.JAR_FILE) {
+                classLocator = new ClassPathScannerForJarFile();
+            }
+
+            locatedClasses.addAll(classLocator.locateClasses(directory.getDirectory()));
+        }
+
+        return locatedClasses;
     }
 
     /**
@@ -85,7 +100,7 @@ public class Main {
      *
      * @param startupClass any class from the client side.
      */
-    private static void runStartUpMethod(Class<?> startupClass) {
+    private static void runStartUpMethod(Class<?> startupClass, DependencyContainer dependencyContainer) {
         ServiceDetails serviceDetails = dependencyContainer.getServiceDetails(startupClass);
 
         if (serviceDetails == null) {

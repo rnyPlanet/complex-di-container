@@ -51,7 +51,7 @@ public class ClassPathScannerForJarFile implements ClassPathScanner {
                         .replaceAll("\\\\", ".")
                         .replaceAll("/", ".");
 
-                classes.add(Class.forName(className));
+                classes.add(Class.forName(className, true, Thread.currentThread().getContextClassLoader()));
             }
         } catch (IOException | ClassNotFoundException e) {
             throw new ClassLocationException(e.getMessage(), e);

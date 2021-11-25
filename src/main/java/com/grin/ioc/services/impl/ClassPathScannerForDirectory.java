@@ -19,8 +19,11 @@ public class ClassPathScannerForDirectory implements ClassPathScanner {
 
     private final Set<Class<?>> locatedClasses;
 
-    public ClassPathScannerForDirectory() {
+    private final ClassLoader classLoader;
+
+    public ClassPathScannerForDirectory(ClassLoader classLoader) {
         this.locatedClasses = new HashSet<>();
+        this.classLoader = classLoader;
     }
 
     @Override
@@ -73,7 +76,7 @@ public class ClassPathScannerForDirectory implements ClassPathScanner {
             String className = packageName + file.getName()
                     .replace(Constants.CLASS_FILE_EXTENSION, "");
 
-            this.locatedClasses.add(Class.forName(className));
+            this.locatedClasses.add(Class.forName(className, true, this.classLoader));
         }
     }
 

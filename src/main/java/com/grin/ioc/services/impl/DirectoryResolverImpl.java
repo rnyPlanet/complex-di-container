@@ -6,6 +6,7 @@ import com.grin.ioc.models.Directory;
 import com.grin.ioc.services.DirectoryResolver;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * DirectoryResolver implementation.
@@ -19,6 +20,15 @@ public class DirectoryResolverImpl implements DirectoryResolver {
         String directory = this.getDirectory(startupClass);
 
         return new Directory(directory, this.getDirectoryType(directory));
+    }
+
+    @Override
+    public Directory resolveDirectory(File directory) {
+        try {
+            return new Directory(directory.getCanonicalPath(), this.getDirectoryType(directory.getCanonicalPath()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

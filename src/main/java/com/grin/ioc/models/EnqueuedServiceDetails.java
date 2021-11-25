@@ -113,4 +113,9 @@ public class EnqueuedServiceDetails {
 
         throw new IllegalArgumentException(String.format("Invalid dependency \"%s\".", dependencyType));
     }
+
+    @Override
+    public String toString() {
+        return this.serviceDetails.getServiceType().getName();
+    }
 }

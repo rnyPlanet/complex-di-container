@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  */
 public class InstantiationServicesImpl implements InstantiationServices {
 
-    private static final String MAX_NUMBER_OF_ALLOWED_ITERATIONS_REACHED = "Maximum number of allowed iterations was reached '%s'.";
+    private static final String MAX_NUMBER_OF_ALLOWED_ITERATIONS_REACHED = "Maximum number of allowed iterations was reached '%s'. Remaining services: \n %s";
     private static final String COULD_NOT_FIND_CONSTRUCTOR_PARAM_MSG = "Could not create instance of '%s'. Parameter '%s' implementation was not found";
 
     /**
@@ -83,7 +83,11 @@ public class InstantiationServicesImpl implements InstantiationServices {
 
         while (!this.enqueuedServiceDetails.isEmpty()) {
             if (counter > maxNumberIteration) {
-                throw new ServiceInstantiationException(String.format(MAX_NUMBER_OF_ALLOWED_ITERATIONS_REACHED, maxNumberIteration));
+                throw new ServiceInstantiationException(String.format(
+                        MAX_NUMBER_OF_ALLOWED_ITERATIONS_REACHED,
+                        maxNumberIteration,
+                        this.enqueuedServiceDetails)
+                );
             }
 
             EnqueuedServiceDetails enqueuedServiceDetails = this.enqueuedServiceDetails.removeFirst();
@@ -202,6 +206,17 @@ public class InstantiationServicesImpl implements InstantiationServices {
                             .map(Method::getReturnType)
                             .collect(Collectors.toList())
             );
+        }
+
+        //If services are provided through config, add them to the list of available classes and instances.
+        this.allAvailableClasses.addAll(this.configuration.getProvidedServices()
+                .stream()
+                .map(ServiceDetails::getServiceType)
+                .collect(Collectors.toList())
+        );
+
+        for (ServiceDetails instantiatedService : this.configuration.getProvidedServices()) {
+            this.registerInstantiatedService(instantiatedService);
         }
 
         this.setDependencyRequirements();
