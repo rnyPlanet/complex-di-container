@@ -60,7 +60,7 @@ public class Main {
                 objectInstantiationService
         );
 
-        Set<Class<?>> locatedClasses = locateClasses(startupDirectories);
+        Set<Class<?>> locatedClasses = locateClasses(startupDirectories, configuration);
 
         Set<ServiceDetails> mappedServices = scanningService.mapServices(locatedClasses);
         List<ServiceDetails> serviceDetails = instantiationService.instantiateServicesAndBeans(mappedServices);
@@ -72,16 +72,16 @@ public class Main {
         return dependencyContainer;
     }
 
-    private static Set<Class<?>> locateClasses(File[] startupDirectories) {
+    private static Set<Class<?>> locateClasses(File[] startupDirectories, DIConfiguration configuration) {
         Set<Class<?>> locatedClasses = new HashSet<>();
         DirectoryResolver directoryResolver = new DirectoryResolverImpl();
 
         for (File startupDirectory : startupDirectories) {
             final Directory directory = directoryResolver.resolveDirectory(startupDirectory);
 
-            ClassPathScanner classLocator = new ClassPathScannerForDirectory(Thread.currentThread().getContextClassLoader());
+            ClassPathScanner classLocator = new ClassPathScannerForDirectory(configuration);
             if (directory.getDirectoryType() == DirectoryType.JAR_FILE) {
-                classLocator = new ClassPathScannerForJarFile();
+                classLocator = new ClassPathScannerForJarFile(configuration);
             }
 
             locatedClasses.addAll(classLocator.locateClasses(directory.getDirectory()));

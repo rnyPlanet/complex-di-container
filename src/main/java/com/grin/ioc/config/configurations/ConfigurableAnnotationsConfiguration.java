@@ -12,11 +12,15 @@ public class ConfigurableAnnotationsConfiguration extends BaseConfiguration {
     private Set<Class<? extends Annotation>> beanAnnotations;
     private Map<Class<?>, Class<? extends Annotation>> additionalClasses;
 
+    private ClassLoader classLoader;
+
     public ConfigurableAnnotationsConfiguration(DIConfiguration parentConfig) {
         super(parentConfig);
         this.serviceAnnotations = new HashSet<>();
         this.beanAnnotations = new HashSet<>();
         this.additionalClasses = new HashMap<>();
+
+        this.classLoader = Thread.currentThread().getContextClassLoader();
     }
 
     public ConfigurableAnnotationsConfiguration addServiceAnnotation(Class<? extends Annotation> annotation) {
@@ -53,5 +57,14 @@ public class ConfigurableAnnotationsConfiguration extends BaseConfiguration {
 
     public Map<Class<?>, Class<? extends Annotation>> getAdditionalClasses() {
         return this.additionalClasses;
+    }
+
+    public ConfigurableAnnotationsConfiguration setClassLoader(ClassLoader classLoader) {
+        this.classLoader = classLoader;
+        return this;
+    }
+
+    public ClassLoader getClassLoader() {
+        return this.classLoader;
     }
 }

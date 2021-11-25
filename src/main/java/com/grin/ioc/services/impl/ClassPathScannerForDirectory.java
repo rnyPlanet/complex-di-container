@@ -1,5 +1,6 @@
 package com.grin.ioc.services.impl;
 
+import com.grin.ioc.config.DIConfiguration;
 import com.grin.ioc.constants.Constants;
 import com.grin.ioc.exceptions.ClassLocationException;
 import com.grin.ioc.services.ClassPathScanner;
@@ -21,9 +22,9 @@ public class ClassPathScannerForDirectory implements ClassPathScanner {
 
     private final ClassLoader classLoader;
 
-    public ClassPathScannerForDirectory(ClassLoader classLoader) {
+    public ClassPathScannerForDirectory(DIConfiguration configuration) {
         this.locatedClasses = new HashSet<>();
-        this.classLoader = classLoader;
+        this.classLoader = configuration.annotations().getClassLoader();
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.grin.ioc.services.impl;
 
+import com.grin.ioc.config.DIConfiguration;
 import com.grin.ioc.constants.Constants;
 import com.grin.ioc.exceptions.ClassLocationException;
 import com.grin.ioc.services.ClassPathScanner;
@@ -20,6 +21,12 @@ import java.util.jar.JarFile;
  * executed and filters those entries have are class files.
  */
 public class ClassPathScannerForJarFile implements ClassPathScanner {
+
+    private ClassLoader classLoader;
+
+    public ClassPathScannerForJarFile(DIConfiguration configuration) {
+        this.classLoader = configuration.annotations().getClassLoader();
+    }
 
     /**
      * Creates JarFile from the given directory.
@@ -51,7 +58,7 @@ public class ClassPathScannerForJarFile implements ClassPathScanner {
                         .replaceAll("\\\\", ".")
                         .replaceAll("/", ".");
 
-                classes.add(Class.forName(className, true, Thread.currentThread().getContextClassLoader()));
+                classes.add(Class.forName(className, true, this.classLoader));
             }
         } catch (IOException | ClassNotFoundException e) {
             throw new ClassLocationException(e.getMessage(), e);
